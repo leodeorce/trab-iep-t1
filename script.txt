@@ -1,0 +1,91 @@
+testmycalc.c:
+
+	*destacar os defines de tamanho de buffer*
+
+		"A nossa calculadora recebe e envia mensagens de formatações específicas."
+
+		"Para a mensagem de envio, o primeiro elemento da string enviada é o caractere
+			referente ao símbolo escolhido como representante da operação desejada,
+			por exemplo, um símbolo de mais para a operação de soma."
+
+		"Os próximos quatro elementos serão caracteres cujos valores em binário
+			concatenados formam os 4 bytes que representam o primeiro número inteiro."
+
+		"O mesmo ocorre para os últimos quatro elementos, que representam o segundo
+			número inteiro, totalizando nove elementos na string de envio."
+
+		"A mensagem recebida contém o resultado da operação na mesma representação usada
+			nos números inteiros enviados."
+
+	*destacar função converter_para_bytes*
+
+		"Essa função auxiliar recebe um número inteiro de 32 bits e converte esse número
+			para a representação em string mencionada anteriormente."
+
+		"Para isso ela faz o uso de operações shift e bitwise:"
+
+		"Os 8 bits mais significativos são deslocados para a direita e armazenados na
+			primeira posição da variável global "bytes"."
+
+		"E de forma similar os bits são deslocados e armazenados nas suas devidas posições."
+
+	*destacar int32_t*
+
+		"O tipo int32_t é usado para garantir a representação de um inteiro em 4 bytes."
+
+	*destacar open("/dev/mycalc", O_RDWR)*
+
+		"A função open pode ser usada sobre o arquivo /dev/mycalc uma vez que este já foi
+			criado antes da execução de testmycalc."
+
+		"O retorno da função open é um ponteiro que nos permite escrever e ler da calculadora."
+
+	*destacar mensagens de instrução e scanf's*
+
+		"Estas são as mensagens de instrução do uso da calculadora e os trechos de resgate
+			da operação desejada do teclado."
+
+	*destacar stringEnviar[0] = operador*
+
+		"O operador é imediatamente inserido no primeiro elemento da string a ser enviada."
+
+	*destacar converter_para_bytes*
+
+		"O primeiro número é convertido para a representação em string através da função
+			auxiliar."
+
+	*destacar stringEnviar[i + 1] = bytes[i]*
+
+		"A string de envio recebe a representação em string criada"
+
+	*destacar as mesmas coisas para o segundo número*
+
+		"O mesmo acontece com o segundo número."
+
+	*destacar o write*
+
+		"A operação write envia a string criada para a calculadora onde a operação será
+			imediatamente computada."
+
+	*destacar o getchar*
+
+		"O programa espera que o usuário pressione ENTER para continuar e receber o
+			resultado."
+
+	*destacar o read*
+
+		"O programa lê a resposta da calculadora e armazena o resultado em stringReceber."
+
+	*destacar as 4 linhas de transformação do resultado*
+
+		"O processo de reverter a representação em string de um número inteiro é executado
+			sobre o a string recebida e o número é armazenado na variável resultado."
+
+	*destacar o print*
+
+		"Que é impressa no final."
+
+mycalc.c:
+
+
+testes:
