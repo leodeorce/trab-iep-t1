@@ -18,25 +18,8 @@ char* converter_para_bytes(int32_t num)
    bytes[3] =  num        & 0xFF;
 }
 
-int main()
-{
-   int      write_return;
-   int      read_return;
-   int      open_return;
-   char     operador;
-   int32_t  primNumero;
-   int32_t  segNumero;
-   unsigned char stringEnviar[SEND_BUFFER_LENGTH];
-   unsigned char stringReceber[RECEIVE_BUFFER_LENGTH];
-
-   printf("\nIniciando calculadora...\n");
-
-   open_return = open("/dev/mycalc", O_RDWR);       // Abre dispositivo com permissao de leitura e escrita
-   if (open_return < 0) {
-      perror("\nFalha ao abrir calculadora");
-      return errno;
-   }
-
+void print_menu(){
+   
    printf("\nComo utilizar esta calculadora:\n");
    printf("   1. Digite o operador correspondente a operacao que deseja de acordo com a tabela abaixo;\n");
    printf("   2. Digite o numero que corresponde ao lado esquerdo da operacao;\n");
@@ -47,16 +30,77 @@ int main()
    printf("   -\tSubtracao\n");
    printf("   *\tMultiplicacao\n");
    printf("   /\tDivisao\n");
-   printf("\n");
+   printf("\n");   
+}
 
-   printf("%*s", 17, "Operacao: ");
-   scanf("%c", &operador);             // Le operador
+int verifica_operador(char operador){
+   int sucesso = 1;
+   if(operador != '+' && operador != '-' && operador != '*' && operador != '/'){
+      sucesso = 0;
+   }
+   if(!sucesso){
+      putchar('\n');
+      system("clear -x");
+      printf("Favor Inserir corretamente os dados, tente novamente:\n");
+      getchar();
+   } 
+   return sucesso;
+}
 
-   printf("%*s", 17, "Primeiro numero: ");
-   scanf("%d", &primNumero);           // Le primeiro numero
+int verifica_operacao_valida(char operador, int primNumero, int segNumero){
+   if(segNumero == 0 && operador == '/'){
+      putchar('\n');
+      system("clear -x");
+      printf("Divisão por zero não é aceita.\n");
+      printf("Favor Inserir corretamente os dados, tente novamente:\n");
+      getchar();
+      return 0;
+   }
+   return 1;
+}
 
-   printf("%*s", 17, "Segundo numero: ");
-   scanf("%d", &segNumero);            // Le segundo numero
+int main()
+{
+   int      write_return;
+   int      read_return;
+   int      open_return;
+   char     operador;
+   int      sucesso = 0;
+   
+   int32_t  primNumero = 0;
+   int32_t  segNumero = 0;
+   unsigned char stringEnviar[SEND_BUFFER_LENGTH];
+   unsigned char stringReceber[RECEIVE_BUFFER_LENGTH];
+
+   printf("\nIniciando calculadora...\n");
+
+   open_return = open("/dev/mycalc", O_RDWR);       // Abre dispositivo com permissao de leitura e escrita
+   if (open_return < 0) {
+      perror("\nFalha ao abrir calculadora");
+      return errno;
+   }
+   
+   while(!sucesso){
+      print_menu();
+      printf("%*s", 17, "Operacao: ");
+      if (scanf(" %c", &operador) != 1) {
+         continue;
+      } else {
+         sucesso = verifica_operador(operador);
+         if(!sucesso) continue;
+      }
+      printf("%*s", 17, "Primeiro numero: ");
+      if (scanf("%d", &primNumero) != 1){
+         sucesso = 0;
+         continue;
+      }
+      printf("%*s", 17, "Segundo numero: ");
+      if (scanf("%d", &segNumero) != 1)  {
+         sucesso = 0;
+         continue;
+      }
+      sucesso = verifica_operacao_valida(operador, primNumero, segNumero);      
+   }
 
    // String de envio inicia com o operador escolhido
    stringEnviar[0] = operador;

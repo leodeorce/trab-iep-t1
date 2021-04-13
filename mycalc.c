@@ -60,7 +60,7 @@ static int __init mycalc_init(void)
    mycalcClass = class_create(THIS_MODULE, CLASS_NAME);
    if ( IS_ERR(mycalcClass) ) {
       unregister_chrdev(majorNumber, DEVICE_NAME);
-      printk(KERN_ALERT "Failed to register device class\n");
+      printk(KERN_ALERT "MyCalc: Failed to register device class\n");
       return PTR_ERR(mycalcClass);
    }
    printk(KERN_INFO "MyCalc: device class registered correctly\n");
@@ -70,7 +70,7 @@ static int __init mycalc_init(void)
    if ( IS_ERR(mycalcDevice) ) {
       class_destroy(mycalcClass);
       unregister_chrdev(majorNumber, DEVICE_NAME);
-      printk(KERN_ALERT "Failed to create the device\n");
+      printk(KERN_ALERT "MyCalc: Failed to create the device\n");
       return PTR_ERR(mycalcDevice);
    }
    printk(KERN_INFO "MyCalc: device class created correctly\n");

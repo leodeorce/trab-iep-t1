@@ -1,83 +1,85 @@
-All going well, the process to build the kernel module should be straightforward, provided that you have installed the Linux headers as described in the first article. The steps are as follows:
+Integrantes: 
+João Felipe Gobeti Calenzani
+Leonardo Deorce Lima de Oliveira
+Philipe Aguiar Marques
 
-$ make
+Para compilar o módulo mycalc, realize os seguintes comandos em seu terminal:
+
+$ sudo make
+
+verificando a existência do arquivo .ko:
 $ ls -l *.ko
-$ ls -l test 
-$ sudo insmod chardrv.ko
+
+inserindo o módulo no kernel:
+$ sudo insmod mycalc.ko
+
+Caso queira verificar se o módulo foi inserido corretamente:
 $ lsmod
 
-The device is now present in the /dev directory, with the following attributes:
+e procure o módulo de nome "mycalc". Alternativamente, podemos usar:
 
-$ cd /dev
-$ ls -l char*
- crw------- 1 root root 240, 0 Apr  8 19:28 chardrv
+$ lsmod | grep mycalc
 
-You can see that, in this case, the major number is 240 — this is automatically assigned by the code!
+Dessa forma o terminal deve mostrar o módulo inserido.
 
-We can then use the writechardrv and readchardrv program to test that the LKM is working correctly. 
+Para verificar a existência do arquivo do dispositivo na pasta /dev:
 
-$ sudo ./writechardrv
+$ ls /dev/mycalc
 
- Starting device write code example...
- Type in a short string to send to the kernel module:
- This is a test of the chardrv LKM
- Writing message to the device [This is a test of the chardrv LKM].
- Goodbye!
+O Terminal deve retornar o nome do módulo, comprovando a existência do arquivo como driver.
 
-$ sudo ./readchardrv
- Starting device read code example...
- Reading from the device...
- The received message is: [This is a test of the chardrv LKM(32 letters)]
- Goodbye!
+Para testar o funcionamento do driver, basta utilizar o testmycalc, que já foi compilado no make:
 
-$ sudo rmmod ebbchar
+$ sudo ./testmycalc
 
-$ sudo dmesg
+O programa pedirá para que seja inserido um operador ('+', '-', '*' ou '/'), e dois números inteiros.
+Após isso, será feita a comunicação com o driver que retornará o resultado da operação.
+Caso a entrada esteja formatada de forma indesejável, ou seja, com um operador diferente dos possíveis
+operadores mencionados ou números diferentes de inteiro, o programa imprime um aviso e,
+em seguida, imprime um novo menu.
+Exemplo de saída do programa:
 
-There are two significant problems with the current LKM. The first is that the LKM device can only be accessed with superuser permissions, and the second is that the current LKM is not multi-process safe.
+"
+Como utilizar esta calculadora:
+   1. Digite o operador correspondente a operacao que deseja de acordo com a tabela abaixo;
+   2. Digite o numero que corresponde ao lado esquerdo da operacao;
+   3. Digite o numero que corresponde ao lado direito da operacao;
 
-Adding Mutex Locks
+   +    Soma
+   -    Subtracao
+   *    Multiplicacao
+   /    Divisao
 
-The Linux kernel provides a full implementation of semaphores — a data type (struct semaphore) that is used for controlling access by multiple processes to a shared resource. The easiest way to use this semaphore code within the kernel is to use mutexes, as there is a full set of helper functions and macros available.
+       Operacao: *
+Primeiro numero: 89
+ Segundo numero: -1
 
-A simple way to prevent the problems described above is to prevent two processes from using the /dev/chardrv device at the same time. A mutex is a lock that can set (put down) before a process begins using a shared resource. The lock can then be released (brought up) when the process is finished using the shared resource. When the lock has been set, no other process can access the locked code region. Once the mutex lock has been released by the process that locked it, the shared region of code is once again available to be accessed by the other process, which in turn locks the resource.
+Enviando operacao para a calculadora...
+Pressione ENTER para ler a resposta da calculadora...
 
-There are only very minor changes required to the code in order to implement mutex locks. An outline of these changes is provided below:
+Lendo resposta da calculadora...
 
-####################################################
-#include <linux/mutex.h>	         // Required for the mutex functionality
-...
+Resultado: -89
 
-static DEFINE_MUTEX(chardrv_mutex);  // A macro that is used to declare a new mutex that is visible in this file
-                                     // results in a semaphore variable chardrv_mutex with value 1 (unlocked)
-                                     // DEFINE_MUTEX_LOCKED() results in a variable with value 0 (locked)
-...
+Finalizando calculadora...
+"
 
-static int __init chardrv_init(void){
-   ...
-   mutex_init(&chardrv_mutex);       // Initialize the mutex lock dynamically at runtime
-   ...
-}
+Caso queira verificar as mensagens printadas pelo driver:
 
-static void __exit chardrv_exit(void){
-   mutex_destroy(&chardrv_mutex);        /// destroy the dynamically-allocated mutex
-   ...
-}
+$ dmesg
 
-static int dev_open(struct inode *inodep, struct file *filep){
-   if(!mutex_trylock(&chardrv_mutex)){    // Try to acquire the mutex (i.e., put the lock on/down)
-                                          // returns 1 if successful and 0 if there is contention
-      printk(KERN_ALERT "Chardrv: Device in use by another process");
-      return -EBUSY;
-   }
-   ...
-}
+Exemplo de saída do dmesg:
+"
+[15069.933976] MyCalc: Device has been opened
+[15080.457739] MyCalc: Received 9 characters from the user
+[15080.838123] MyCalc: Sent 4 characters to the user
+[15080.838245] MyCalc: Device successfully closed
+"
 
-static int dev_release(struct inode *inodep, struct file *filep){
-   mutex_unlock(&chardrv_mutex);          /// Releases the mutex (i.e., the lock goes up)
-   ...
-}
- 
-######################################################
+Lembrando que o dmesg exibe mensagens referentes a diversos drivers. Caso queira ver apenas mensagens do mycalc:
 
+$ dmesg | grep MyCalc
 
+Caso queira remover o driver do kernel:
+
+$ sudo rmmod mycalc
